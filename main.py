@@ -1,5 +1,4 @@
-from pprint import pprint
-
+from datetime import datetime, timedelta
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from Tk import token
@@ -17,14 +16,17 @@ kb_start.add('Расписание')
 kb_start.add('Наши специалисты')
 kb_start.add('Врач. Учётная запись')
 
-docs_sp = list()
+
 kb_docs = ReplyKeyboardMarkup(resize_keyboard=True)
+
+docs_sp = list()
 with open('data/doc_list.csv', 'r', newline='') as csvfile:
     spamreader = csv.reader(csvfile)
     for row in spamreader:
         kb_docs.add(row[0])
         docs_sp.append(row)
 
+# print(docs_sp)
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
@@ -36,8 +38,25 @@ async def start(message: types.Message):
 @dp.message_handler(Text(equals='Запись'))
 async def booking(message: types.Message):
     await message.answer(
-        text=f'work',
-        reply_markup=types.ReplyKeyboardRemove())
+        text=f'Выберите врача',
+        reply_markup=kb_docs)
+
+    specalist_booking = message.text
+    now = datetime.now()
+    kb_date = ReplyKeyboardMarkup(resize_keyboard=True)
+
+    for i in range(0, 8):
+        a = now + timedelta(days=i)
+        kb_date.add(a.strftime("%d/%m/%y")[:-3])
+
+    @dp.message_handler()
+    async def datee(message: types.Message):
+        await message.answer(
+            text=f'Выберите дату',
+            reply_markup=kb_date)
+
+        date_booking = message.text
+
 
 
 @dp.message_handler(Text(equals='Расписание'))
