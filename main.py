@@ -41,20 +41,20 @@ async def booking(message: types.Message):
 
 
 @dp.message_handler(Text(equals='Расписание'))
-async def booking(message: types.Message):
+async def schedule(message: types.Message):
     await message.answer(
         text=f'work',
         reply_markup=types.ReplyKeyboardRemove())
 
 
 @dp.message_handler(Text(equals='Наши специалисты'))
-async def booking(message: types.Message):
+async def specialists(message: types.Message):
     await message.answer(
         text=f'work',
         reply_markup=kb_docs)
 
     @dp.message_handler()
-    async def vra4(message: types.Message):
+    async def vrach(message: types.Message):
         print(message.text)
         for i in docs_sp:
             if i[0] == message.text:
@@ -62,12 +62,12 @@ async def booking(message: types.Message):
                 photo = open(path, 'rb')
                 await bot.send_photo(chat_id=message.chat.id,
                                      photo=photo,
-                                     caption=f'ФИО: {i[0]}\nОбласть деятельности: {i[1]}\nВремя работы {i[2]}',
+                                     caption=f'ФИО: {i[0]}\nОбласть деятельности: {i[1]}\nВремя работы: {i[2]}',
                                      reply_markup=kb_docs)
 
 
 @dp.message_handler(Text(equals='Врач. Учётная запись'))
-async def booking(message: types.Message):
+async def account(message: types.Message):
     await message.answer(
         text=f'work',
         reply_markup=types.ReplyKeyboardRemove())
