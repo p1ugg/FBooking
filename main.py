@@ -2,15 +2,21 @@ from datetime import datetime, timedelta
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from Tk import token
+from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 import csv
 from time_docs import dict_docs
+from louder import Schedule
+from louder2 import Special
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+
 
 # Инециализация бота
 TOKEN_API = token
 
 bot = Bot(TOKEN_API)
-dp = Dispatcher(bot)
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
 
 kb_start = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_start.add('🔔 Запись 🛎')
@@ -39,16 +45,13 @@ greetings = f'''😇 Приветствуем! 😇 \n\nВы находитес�
  продолжения работы выберите одну(1) из четырёх(4) функций в меню кнопок 🔅'''
 
 
-
-# print(docs_sp)
-
 # 🩺🩻🌡🩹❗️❕🔅〽️🌀🕑▫️🔸🔻🔺🟢🔵⚪️🟣🔹☑️🟩🔔🕘📢‼️🛎🧬🗓📆
 
 @dp.message_handler(commands=['start'])  # Обработчик команды /start
 async def start(message: types.Message):
     beaver_center = open('data/beavercenter.jpg', 'rb')
     await message.delete()
-    await bot.send_photo(message.chat.id, beaver_center, caption=greetings,reply_markup=kb_start, parse_mode='HTML')
+    await bot.send_photo(message.chat.id, beaver_center, caption=greetings, reply_markup=kb_start, parse_mode='HTML')
     # await bot.send_message(chat_id=message.from_user.id, text=greetings,
     #                        reply_markup=kb_start, disable_web_page_preview=True, parse_mode='HTML')
 
@@ -76,43 +79,51 @@ async def booking(message: types.Message):
         date_booking = message.text
 
 
-@dp.message_handler(Text(equals='🕑 Расписание 🕘'))
+@dp.message_handler(Text(equals='🕑 Расписание 🕘'), state=None)
 async def schedule(message: types.Message):
     await message.answer(
         text=f'Выберите специалиста ниже',
         reply_markup=kb_docs)
-
-    @dp.message_handler()
-    async def vrach1(message: types.Message):
-        timee = dict_docs[message.text]
-        s = ''
-        for j in timee.items():
-            if 'Не работает' not in j[1]:
-                s += f'{j[0]} - {" ".join(j[1])}\n'
-            else:
-                s += f'{j[0]} - {j[1]}\n'
-        await message.answer(
-            text=s,
-            reply_markup=kb_docs)
+    await Schedule.sch_name.set()
 
 
-@dp.message_handler(Text(equals='☑ Наши специалисты ✅'))
+@dp.message_handler(state=Schedule.sch_name)
+async def vrach1(message: types.Message, state: FSMContext):
+    timee = dict_docs[message.text]
+    s = ''
+    for j in timee.items():
+        if 'Не работает' not in j[1]:
+            s += f'{j[0]} - {" ".join(j[1])}\n'
+        else:
+            s += f'{j[0]} - {j[1]}\n'
+    await message.answer(
+        text=s,
+        reply_markup=kb_start)
+    await state.reset_state()
+
+
+@dp.message_handler(Text(equals='☑ Наши специалисты ✅'), state=None)
 async def specialists(message: types.Message):
     await message.answer(
         text=f'Выберите специалиста ниже',
         reply_markup=kb_docs)
+    await Special.spec_name.set()
 
-    @dp.message_handler()
-    async def vrach(message: types.Message):
-        print(message.text)
-        for i in docs_sp:
-            if i[0] == message.text:
+@dp.message_handler(state=Special.spec_name)
+async def vrach(message: types.Message, state: FSMContext):
+    for i in docs_sp:
+        if i[0] == message.text:
+            try:
                 path = f'data/{i[0]}.jpg'
                 photo = open(path, 'rb')
-                await bot.send_photo(chat_id=message.chat.id,
-                                     photo=photo,
-                                     caption=f'ФИО: {i[0]}\nОбласть деятельности: {i[1]}\nВремя работы: {i[2]}',
-                                     reply_markup=kb_docs)
+            except Exception as ex:
+                path = f'data/{i[0]}.png'
+                photo = open(path, 'rb')
+            await bot.send_photo(chat_id=message.chat.id,
+                                 photo=photo,
+                                 caption=f'ФИО: {i[0]}\nОбласть деятельности: {i[1]}\nВремя работы: {i[2]}',
+                                 reply_markup=kb_start)
+            await state.reset_state()
 
 
 @dp.message_handler(Text(equals='🩺 Врач. Учётная запись 🌡'))
