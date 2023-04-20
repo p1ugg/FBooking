@@ -7,7 +7,7 @@ from aiogram.dispatcher.filters import Text
 import csv
 from time_docs import dict_docs
 from louder import Schedule
-from louder2 import Special
+from louder import Special
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 
