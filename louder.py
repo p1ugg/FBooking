@@ -7,3 +7,10 @@ class Schedule(StatesGroup):
 
 class Special(StatesGroup):
     spec_name = State()
+
+
+class Booking(StatesGroup):
+    name = State()
+    date_booking = State()
+    time_booking = State()
+    check_true_booking = State()

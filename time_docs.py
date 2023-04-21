@@ -48,3 +48,4 @@ with open('data/doc_list.csv', 'r', newline='') as csvfile:
             Dates[i] = new_sp[dd]
 
         dict_docs[row[0]] = Dates
+print(dict_docs)
