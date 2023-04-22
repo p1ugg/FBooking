@@ -44,6 +44,14 @@ greetings = f'''😇 Приветствуем! 😇 \n\nВы находитес�
 а также доступ к некоторому сопутсвующему функционалу. Для\
  продолжения работы выберите одну(1) из четырёх(4) функций в меню кнопок 🔅'''
 
+def remove_time(dict_docs, list_of_data):
+    cur_list = dict_docs[list_of_data[0]][list_of_data[1]]
+    cur_list.remove(list_of_data[2])
+    return cur_list
+
+
+
+
 
 # 🩺🩻🌡🩹❗️❕🔅〽️🌀🕑▫️🔸🔻🔺🟢🔵⚪️🟣🔹☑️🟩🔔🕘📢‼️🛎🧬🗓📆
 
@@ -103,11 +111,11 @@ async def process_times(message: types.Message, state: FSMContext):
     kb_times = ReplyKeyboardMarkup(resize_keyboard=True)
     time_doc = dict_docs[list_of_data[0]][list_of_data[1]]
     if time_doc == 'Не работает':
-        list_of_data.clear()
         await message.answer(
             text=f'К сожалению, специалист не работает в этот день.\nПопробуйте выбрать другой день или поменять специалиста.',
             reply_markup=kb_start
         )
+        list_of_data.clear()
         await state.finish()
     else:
         for i in time_doc:
@@ -132,18 +140,23 @@ async def process_check_true_booking(message: types.Message, state: FSMContext):
         reply_markup=kb_yes_or_no
     )
 
-
 @dp.message_handler(Text(equals='Да'), state=Booking.check_true_booking)
 async def check_result_yes(message: types.Message, state: FSMContext):
 
     with open('data/dates_of_booking.csv', 'a', newline='', encoding='utf-8') as csvfile:
         spamwriter = csv.writer(csvfile)
         spamwriter.writerows([list_of_data])
+
+    new_list = remove_time(dict_docs, list_of_data)
+    dict_docs[list_of_data[0]][list_of_data[1]] = new_list
+
     await message.answer(
         text=f'Вы успешно записались к врачу. Для личной связи.....',
         reply_markup=kb_start
     )
     await state.finish()
+
+
 
 
 @dp.message_handler(Text(equals='Нет'), state=Booking.check_true_booking)
