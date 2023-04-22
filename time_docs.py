@@ -48,4 +48,11 @@ with open('data/doc_list.csv', 'r', newline='') as csvfile:
             Dates[i] = new_sp[dd]
 
         dict_docs[row[0]] = Dates
-print(dict_docs)
+
+with open('data/dates_of_booking.csv', 'r', newline='', encoding='utf-8') as csvfile:
+    spamreader = csv.reader(csvfile)
+    for row in spamreader:
+        new_list = dict_docs[row[0]][row[1]]
+        new_list.remove(row[2])
+        dict_docs[row[0]][row[1]] = new_list
+pprint(dict_docs)
