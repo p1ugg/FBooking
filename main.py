@@ -10,7 +10,6 @@ from louder import Schedule, Special, Booking
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import logging
 
-
 # -*- coding: utf-8 -*-
 
 logging.basicConfig(level=logging.INFO)
@@ -28,14 +27,23 @@ kb_start.add('🕑 Расписание 🕘')
 kb_start.add('☑ Наши специалисты ✅')
 kb_start.add('🩺 Врач. Учётная запись 🌡')
 
-kb_docs = ReplyKeyboardMarkup(resize_keyboard=True)
+kb_yes_or_no = ReplyKeyboardMarkup(resize_keyboard=True)
+kb_yes_or_no.add('Да')
+kb_yes_or_no.add('Нет')
 
+kb_docs = ReplyKeyboardMarkup(resize_keyboard=True)
+list_kb_times = []
 docs_sp = list()
 with open('data/doc_list.csv', 'r', newline='') as csvfile:
     spamreader = csv.reader(csvfile)
     for row in spamreader:
         kb_docs.add(row[0])
         docs_sp.append(row)
+now = datetime.now()
+kb_date = ReplyKeyboardMarkup(resize_keyboard=True)
+for i in range(0, 8):
+    a = now + timedelta(days=i)
+    kb_date.add(a.strftime("%d/%m/%y"))
 
 greetings = f'''😇 Приветствуем! 😇 \n\nВы находитесь в <u>telegram-боте</u> клиники <code>ООО"Бобёр"</code> 🦫\n
 ❗️Наша клиника оснащена <b>первоклассным оборудованием</b>, 
@@ -48,13 +56,11 @@ greetings = f'''😇 Приветствуем! 😇 \n\nВы находитес�
 а также доступ к некоторому сопутсвующему функционалу. Для\
  продолжения работы выберите одну(1) из четырёх(4) функций в меню кнопок 🔅'''
 
+
 def remove_time(dict_docs, list_of_data):
     cur_list = dict_docs[list_of_data[0]][list_of_data[1]]
     cur_list.remove(list_of_data[2])
     return cur_list
-
-
-
 
 
 # 🩺🩻🌡🩹❗️❕🔅〽️🌀🕑▫️🔸🔻🔺🟢🔵⚪️🟣🔹☑️🟩🔔🕘📢‼️🛎🧬🗓📆
@@ -66,8 +72,6 @@ async def start(message: types.Message):
     await bot.send_photo(message.chat.id, beaver_center, caption=greetings, reply_markup=kb_start, parse_mode='HTML')
     # await bot.send_message(chat_id=message.from_user.id, text=greetings,
     #                        reply_markup=kb_start, disable_web_page_preview=True, parse_mode='HTML')
-
-
 
 
 @dp.message_handler(state='*', commands='cancel')
@@ -90,17 +94,16 @@ async def booking(message: types.Message):
     await Booking.name.set()
 
 
+@dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Booking.name)
+async def procces_date_invalid(message: types.Message, state: FSMContext):
+    return await message.reply('Такого врача у нас не работает.\nПожалуйста, выбери врача с клавиатуры',
+                               reply_markup=kb_docs)
+
+
 @dp.message_handler(state=Booking.name)
 async def procces_date(message: types.Message, state: FSMContext):
-    now = datetime.now()
-    kb_date = ReplyKeyboardMarkup(resize_keyboard=True)
-
     async with state.proxy() as list_of_data:
         list_of_data['name'] = message.text
-
-    for i in range(0, 8):
-        a = now + timedelta(days=i)
-        kb_date.add(a.strftime("%d/%m/%y"))
 
     await message.answer(
         text=f'🗓 Выберите <i>удобную</i> для вас дату <u>из</u> <b>ниже представленного</b> <u>списка</u>:',
@@ -108,30 +111,42 @@ async def procces_date(message: types.Message, state: FSMContext):
     await Booking.next()
 
 
+@dp.message_handler(lambda message: [message.text] not in list(kb_date)[0][1], state=Booking.date_booking)
+async def process_times_invalid(message: types.Message, state: FSMContext):
+    return await message.reply('Выбрана неправильная дата.\nПожалуйста, выбери дату с клавиатуры', reply_markup=kb_date)
+
+
 @dp.message_handler(state=Booking.date_booking)
 async def process_times(message: types.Message, state: FSMContext):
-    await Booking.next()
-
+    global list_kb_times
     async with state.proxy() as list_of_data:
         list_of_data['date'] = message.text
 
     kb_times = ReplyKeyboardMarkup(resize_keyboard=True)
+
     time_doc = dict_docs[list_of_data['name']][list_of_data['date']]
     if time_doc == 'Не работает':
         await message.answer(
             text=f'К сожалению, специалист не работает в этот день.\nПопробуйте выбрать другой день или поменять специалиста.',
-            reply_markup=kb_start
+            reply_markup=kb_date
         )
-        list_of_data.clear()
         await state.finish()
     else:
         for i in time_doc:
             kb_times.add(i)
-
+        list_kb_times = list(kb_times)[0][1]
         await message.answer(
             text=f'Выберите удобное для Вас время',
             reply_markup=kb_times
         )
+        await Booking.next()
+
+
+@dp.message_handler(lambda message: [message.text] not in list_kb_times, state=Booking.time_booking)
+async def process_check_true_booking_invalid(message: types.Message, state: FSMContext):
+    print(list_kb_times)
+    print(message.text)
+    return await message.reply('Пожалуйста, выберите корректное время с клавиатуры')
 
 
 @dp.message_handler(state=Booking.time_booking)
@@ -139,14 +154,20 @@ async def process_check_true_booking(message: types.Message, state: FSMContext):
     await Booking.next()
     async with state.proxy() as list_of_data:
         list_of_data['time'] = message.text
+    kb_times = ReplyKeyboardMarkup(resize_keyboard=True)
     print(list_of_data)
-    kb_yes_or_no = ReplyKeyboardMarkup(resize_keyboard=True)
-    kb_yes_or_no.add('Да')
-    kb_yes_or_no.add('Нет')
+
     await message.answer(
         text=f'Запись к врачу: {list_of_data["name"]}\nДата: {list_of_data["date"]}\nВремя: {list_of_data["time"]}\nВсе ли правильно?',
         reply_markup=kb_yes_or_no
     )
+
+
+@dp.message_handler(lambda message: message.text.lower() not in ['да', 'нет'], state=Booking.check_true_booking)
+async def check_result_invalid(message: types.Message, state: FSMContext):
+    return await message.reply('Пожалуйста, выберите да или нет с клавиатуры',
+                               reply_markup=kb_yes_or_no)
+
 
 @dp.message_handler(Text(equals='Да'), state=Booking.check_true_booking)
 async def check_result_yes(message: types.Message, state: FSMContext):
@@ -166,12 +187,10 @@ async def check_result_yes(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-
-
 @dp.message_handler(Text(equals='Нет'), state=Booking.check_true_booking)
 async def check_result_yes(message: types.Message, state: FSMContext):
     await message.answer(
-        text=f'Возращаю тебя в главное меню',
+        text=f'Возращаю Вас в главное меню',
         reply_markup=kb_start
     )
     await state.finish()

@@ -55,4 +55,4 @@ with open('data/dates_of_booking.csv', 'r', newline='', encoding='utf-8') as csv
         new_list = dict_docs[row[0]][row[1]]
         new_list.remove(row[2])
         dict_docs[row[0]][row[1]] = new_list
-pprint(dict_docs)
+# pprint(dict_docs)
