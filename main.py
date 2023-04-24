@@ -208,7 +208,8 @@ async def check_result_yes(message: types.Message, state: FSMContext):
     )
     doc_id = dict_of_ids[list_of_data['name']]
     ans = f'Оп, оп. К вам записался клиентик - @{message.from_user.username}.\nДата - {list_of_data["date"]}\nВремя - {list_of_data["time"]}'
-    await bot.send_message(doc_id, ans)
+    if doc_id != '':
+        await bot.send_message(doc_id, ans)
     await state.finish()
 
 
@@ -230,8 +231,14 @@ async def schedule(message: types.Message):
     await Schedule.sch_name.set()
 
 
+@dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Schedule.sch_name)
+async def schedule_invalid(message: types.Message, state: FSMContext):
+    return await message.reply('Такой врач у нас не работает.\nПожалуйста, выбери врача с клавиатуры',
+                               reply_markup=kb_docs)
+
+
 @dp.message_handler(state=Schedule.sch_name)
-async def vrach1(message: types.Message, state: FSMContext):
+async def schedule(message: types.Message, state: FSMContext):
     timee = dict_docs[message.text]
     s = ''
     for j in timee.items():
@@ -253,8 +260,14 @@ async def specialists(message: types.Message):
     await Special.spec_name.set()
 
 
+@dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Special.spec_name)
+async def specialist_info_invalid(message: types.Message, state: FSMContext):
+    return await message.reply('Такой врач у нас не работает.\nПожалуйста, выбери врача с клавиатуры',
+                               reply_markup=kb_docs)
+
+
 @dp.message_handler(state=Special.spec_name)
-async def vrach(message: types.Message, state: FSMContext):
+async def specialist_info(message: types.Message, state: FSMContext):
     for i in docs_sp:
         if i[0] == message.text:
             try:
