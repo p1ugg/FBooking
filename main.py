@@ -86,7 +86,7 @@ def remove_time(dict_docs, list_of_data):
 
 @dp.message_handler(commands=['start'], state='*')  # Обработчик команды /start
 async def start(message: types.Message):
-    beaver_center = open('data/beavercenter.jpg', 'rb')
+    beaver_center = open('data/other_photo/beavercenter.jpg', 'rb')
     await message.delete()
 
     await bot.send_photo(message.chat.id, beaver_center, caption=greetings, reply_markup=kb_start, parse_mode='HTML')
@@ -258,10 +258,10 @@ async def vrach(message: types.Message, state: FSMContext):
     for i in docs_sp:
         if i[0] == message.text:
             try:
-                path = f'data/{i[0]}.jpg'
+                path = f'data/photo_docs/{i[0]}.jpg'
                 photo = open(path, 'rb')
             except Exception as ex:
-                path = f'data/{i[0]}.png'
+                path = f'data/photo_docs/{i[0]}.png'
                 photo = open(path, 'rb')
             await bot.send_photo(chat_id=message.chat.id,
                                  photo=photo,
