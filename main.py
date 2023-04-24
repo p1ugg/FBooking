@@ -65,10 +65,12 @@ def remove_time(dict_docs, list_of_data):
 
 # 🩺🩻🌡🩹❗️❕🔅〽️🌀🕑▫️🔸🔻🔺🟢🔵⚪️🟣🔹☑️🟩🔔🕘📢‼️🛎🧬🗓📆
 
-@dp.message_handler(commands=['start'])  # Обработчик команды /start
+@dp.message_handler(commands=['start'], state='*')  # Обработчик команды /start
 async def start(message: types.Message):
+
     beaver_center = open('data/beavercenter.jpg', 'rb')
     await message.delete()
+
     await bot.send_photo(message.chat.id, beaver_center, caption=greetings, reply_markup=kb_start, parse_mode='HTML')
     # await bot.send_message(chat_id=message.from_user.id, text=greetings,
     #                        reply_markup=kb_start, disable_web_page_preview=True, parse_mode='HTML')
@@ -90,13 +92,14 @@ async def cancel_handler(message: types.Message, state: FSMContext):
 async def booking(message: types.Message):
     await message.answer(
         text=f'🧬 Выберите <b>врача</b> <u>из</u> ниже представленного <u>списка</u>: 🧬',
-        reply_markup=kb_docs, parse_mode="HTML")
+        reply_markup=kb_docs,
+        parse_mode="HTML")
     await Booking.name.set()
 
 
 @dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Booking.name)
 async def procces_date_invalid(message: types.Message, state: FSMContext):
-    return await message.reply('Такого врача у нас не работает.\nПожалуйста, выбери врача с клавиатуры',
+    return await message.reply('Такой врач у нас не работает.\nПожалуйста, выбери врача с клавиатуры',
                                reply_markup=kb_docs)
 
 
@@ -128,9 +131,10 @@ async def process_times(message: types.Message, state: FSMContext):
     if time_doc == 'Не работает':
         await message.answer(
             text=f'К сожалению, специалист не работает в этот день.\nПопробуйте выбрать другой день или поменять специалиста.',
-            reply_markup=kb_date
+            reply_markup=kb_start
         )
         await state.finish()
+
     else:
         for i in time_doc:
             kb_times.add(i)
