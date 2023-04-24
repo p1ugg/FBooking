@@ -8,6 +8,10 @@ class Schedule(StatesGroup):
 class Special(StatesGroup):
     spec_name = State()
 
+class Account(StatesGroup):
+    name = State()
+    password = State()
+
 
 class Booking(StatesGroup):
     name = State()

@@ -6,10 +6,12 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 import csv
 from time_docs import dict_docs
-from louder import Schedule, Special, Booking
+from louder import Schedule, Special, Booking, Account
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import logging
 from keyboards import kb_start, kb_yes_or_no, kb_docs, kb_date
+from docs_passwords import get_password
+
 # -*- coding: utf-8 -*-
 
 logging.basicConfig(level=logging.INFO)
@@ -20,7 +22,6 @@ TOKEN_API = token
 bot = Bot(TOKEN_API)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
-
 
 list_kb_times = list()
 docs_sp = list()
@@ -78,7 +79,6 @@ async def start(message: types.Message):
     await message.delete()
 
     await bot.send_photo(message.chat.id, beaver_center, caption=greetings, reply_markup=kb_start, parse_mode='HTML')
-
 
 
 @dp.message_handler(state='*', commands='cancel')
@@ -270,12 +270,62 @@ async def specialist_info(message: types.Message, state: FSMContext):
             await state.reset_state()
 
 
-@dp.message_handler(Text(equals='🩺 Врач. Учётная запись 🌡'))
+@dp.message_handler(Text(equals='🩺 Врач. Учётная запись 🌡'), state=None)
 async def account(message: types.Message):
+    await Account.name.set()
     await message.answer(
-        text=f'work',
-        reply_markup=types.ReplyKeyboardRemove())
+        text=f'Кто ты',
+        reply_markup=kb_docs)
 
+
+@dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Account.name)
+async def procces_password_invalid(message: types.Message, state: FSMContext):
+    return await message.reply('Такой врач у нас не работает.\nПожалуйста, выбери врача с клавиатуры',
+                               reply_markup=kb_docs)
+
+
+@dp.message_handler(state=Account.name)
+async def procces_password(message: types.Message, state: FSMContext):
+    global data
+    async with state.proxy() as data:
+        data['name'] = message.text
+    await message.answer(text=f'Введите пароль', reply_markup=types.ReplyKeyboardRemove())
+    await Account.next()
+
+
+@dp.message_handler(lambda message: message.text != get_password(data['name']), state=Account.password)
+async def password_invalid(message: types.Message, state: FSMContext):
+    return await message.reply('Введите корректный пароль\nЧтобы выйти - cancel')
+
+
+@dp.message_handler(state=Account.password)
+async def password_true(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['pass'] = message.text
+    await message.answer('Харош')
+
+
+
+
+# @dp.message_handler(Text(equals='🩺 Врач. Учётная запись 🌡'), state=None)
+# async def account(message: types.Message):
+#     await message.answer(
+#         text=f'Кто ты?',
+#         reply_markup=kb_docs)
+#     await Account.acc_name.set()
+
+
+# @dp.message_handler(state=Account.acc_name)
+# async def vrach_client(message: types.Message, state: FSMContext):
+#
+#     await message.answer(text='Введите пароль')
+#     Account.next()
+#
+# @dp.message_handler(state=Account.check_password)
+# async def check_password(message: types.Message, state: FSMContext):
+# class Account(StatesGroup):
+#     acc_name = State()
+#     check_password = State()
 
 if __name__ == '__main__':
     executor.start_polling(dp)
