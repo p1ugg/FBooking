@@ -52,7 +52,10 @@ with open('data/doc_list.csv', 'r', newline='') as csvfile:
 with open('data/dates_of_booking.csv', 'r', newline='', encoding='utf-8') as csvfile:
     spamreader = csv.reader(csvfile)
     for row in spamreader:
-        new_list = dict_docs[row[0]][row[1]]
-        new_list.remove(row[2])
-        dict_docs[row[0]][row[1]] = new_list
+        try:
+            new_list = dict_docs[row[0]][row[1]]
+            new_list.remove(row[2])
+            dict_docs[row[0]][row[1]] = new_list
+        except Exception as ex:
+            continue
 # pprint(dict_docs)

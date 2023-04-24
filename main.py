@@ -39,6 +39,25 @@ with open('data/doc_list.csv', 'r', newline='') as csvfile:
     for row in spamreader:
         kb_docs.add(row[0])
         docs_sp.append(row)
+print(docs_sp)
+
+
+def get_dict_of_username_docs(docs_sp):
+    dict_of_ids = dict()
+    for row in docs_sp:
+        dict_of_ids[row[0]] = row[3]
+
+    return dict_of_ids
+
+
+def get_dict_of_id_docs(docs_sp):
+    dict_of_ids = dict()
+    for row in docs_sp:
+        dict_of_ids[row[0]] = row[4]
+
+    return dict_of_ids
+
+
 now = datetime.now()
 kb_date = ReplyKeyboardMarkup(resize_keyboard=True)
 for i in range(0, 8):
@@ -67,7 +86,6 @@ def remove_time(dict_docs, list_of_data):
 
 @dp.message_handler(commands=['start'], state='*')  # Обработчик команды /start
 async def start(message: types.Message):
-
     beaver_center = open('data/beavercenter.jpg', 'rb')
     await message.delete()
 
@@ -148,8 +166,6 @@ async def process_times(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: [message.text] not in list_kb_times, state=Booking.time_booking)
 async def process_check_true_booking_invalid(message: types.Message, state: FSMContext):
-    print(list_kb_times)
-    print(message.text)
     return await message.reply('Пожалуйста, выберите корректное время с клавиатуры')
 
 
@@ -179,15 +195,20 @@ async def check_result_yes(message: types.Message, state: FSMContext):
         list_of_data['yes'] = message.text
     with open('data/dates_of_booking.csv', 'a', newline='', encoding='utf-8') as csvfile:
         spamwriter = csv.writer(csvfile)
-        spamwriter.writerows([[list_of_data['name'], list_of_data['date'], list_of_data['time']]])
-
+        spamwriter.writerows([[list_of_data['name'], list_of_data['date'], list_of_data['time'], message.from_user.id]])
     new_list = remove_time(dict_docs, [list_of_data['name'], list_of_data['date'], list_of_data['time']])
     dict_docs[list_of_data['name']][list_of_data['date']] = new_list
 
+    dict_of_username = get_dict_of_username_docs(docs_sp)
+    dict_of_ids = get_dict_of_id_docs(docs_sp)
+
     await message.answer(
-        text=f'Вы успешно записались к врачу. Для личной связи.....',
+        text=f'Вы успешно записались к врачу.\nЛичная связь с врачом -> {dict_of_username[list_of_data["name"]]}',
         reply_markup=kb_start
     )
+    doc_id = dict_of_ids[list_of_data['name']]
+    ans = f'Оп, оп. К вам записался клиентик - @{message.from_user.username}.\nДата - {list_of_data["date"]}\nВремя - {list_of_data["time"]}'
+    await bot.send_message(doc_id, ans)
     await state.finish()
 
 
@@ -202,6 +223,7 @@ async def check_result_yes(message: types.Message, state: FSMContext):
 
 @dp.message_handler(Text(equals='🕑 Расписание 🕘'), state=None)
 async def schedule(message: types.Message):
+    print(message.from_user.id)
     await message.answer(
         text=f'Выберите специалиста ниже',
         reply_markup=kb_docs)
