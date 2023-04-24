@@ -9,7 +9,7 @@ from time_docs import dict_docs
 from louder import Schedule, Special, Booking
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import logging
-
+from keyboards import kb_start, kb_yes_or_no, kb_docs, kb_date
 # -*- coding: utf-8 -*-
 
 logging.basicConfig(level=logging.INFO)
@@ -21,25 +21,14 @@ bot = Bot(TOKEN_API)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
-kb_start = ReplyKeyboardMarkup(resize_keyboard=True)
-kb_start.add('🔔 Запись 🛎')
-kb_start.add('🕑 Расписание 🕘')
-kb_start.add('☑ Наши специалисты ✅')
-kb_start.add('🩺 Врач. Учётная запись 🌡')
 
-kb_yes_or_no = ReplyKeyboardMarkup(resize_keyboard=True)
-kb_yes_or_no.add('Да')
-kb_yes_or_no.add('Нет')
-
-kb_docs = ReplyKeyboardMarkup(resize_keyboard=True)
-list_kb_times = []
+list_kb_times = list()
 docs_sp = list()
 with open('data/doc_list.csv', 'r', newline='') as csvfile:
     spamreader = csv.reader(csvfile)
     for row in spamreader:
         kb_docs.add(row[0])
         docs_sp.append(row)
-print(docs_sp)
 
 
 def get_dict_of_username_docs(docs_sp):
@@ -59,7 +48,6 @@ def get_dict_of_id_docs(docs_sp):
 
 
 now = datetime.now()
-kb_date = ReplyKeyboardMarkup(resize_keyboard=True)
 for i in range(0, 8):
     a = now + timedelta(days=i)
     kb_date.add(a.strftime("%d/%m/%y"))
@@ -90,8 +78,7 @@ async def start(message: types.Message):
     await message.delete()
 
     await bot.send_photo(message.chat.id, beaver_center, caption=greetings, reply_markup=kb_start, parse_mode='HTML')
-    # await bot.send_message(chat_id=message.from_user.id, text=greetings,
-    #                        reply_markup=kb_start, disable_web_page_preview=True, parse_mode='HTML')
+
 
 
 @dp.message_handler(state='*', commands='cancel')
