@@ -17,3 +17,8 @@ kb_date = ReplyKeyboardMarkup(resize_keyboard=True)
 for i in range(0, 8):
     a = datetime.now() + timedelta(days=i)
     kb_date.add(a.strftime("%d/%m/%y"))
+
+
+kb_for_doc = ReplyKeyboardMarkup(resize_keyboard=True)
+kb_for_doc.add('Посмотреть мои записи')
+kb_for_doc.add('Удалить запись')

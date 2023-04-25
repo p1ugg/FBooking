@@ -9,7 +9,7 @@ from time_docs import dict_docs
 from louder import Schedule, Special, Booking, Account
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import logging
-from keyboards import kb_start, kb_yes_or_no, kb_docs, kb_date
+from keyboards import kb_start, kb_for_doc, kb_yes_or_no, kb_docs, kb_date
 from docs_passwords import get_password
 
 # -*- coding: utf-8 -*-
@@ -80,6 +80,20 @@ def get_schedule(timee):
     return s
 
 
+def get_book(name):
+    book_list = list()
+    with open('data/dates_of_booking.csv', 'r', newline='', encoding='utf-8') as csvfile:
+        spamreader = csv.reader(csvfile)
+        for row in spamreader:
+            a = row[1].split('/')
+            date_string = a[0] + '/' + a[1] + '/' + '20' + a[2] + ' ' + row[2].split('-')[0]
+            date_obj = datetime.strptime(date_string, '%d/%m/%Y %H:%M')
+            if name == row[0] and date_obj > datetime.now():
+                book_list.append((row[0], row[1], row[2], row[3]))
+
+    return book_list
+
+
 @dp.message_handler(commands=['start'], state='*')  # Обработчик команды /start
 async def start(message: types.Message):
     beaver_center = open('data/other_photo/beavercenter.jpg', 'rb')
@@ -111,8 +125,9 @@ async def booking(message: types.Message):
 
 @dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Booking.name)
 async def procces_date_invalid(message: types.Message, state: FSMContext):
-    return await message.reply('❗ Данный вами <b>специалист не работает</b> в <code>ООО"Бобёр"</code> 🦫.\nПожалуйста, <u>выбери врача</u> с клавиатуры',
-                               reply_markup=kb_docs, parse_mode="HTML")
+    return await message.reply(
+        '❗ Данный вами <b>специалист не работает</b> в <code>ООО"Бобёр"</code> 🦫.\nПожалуйста, <u>выбери врача</u> с клавиатуры',
+        reply_markup=kb_docs, parse_mode="HTML")
 
 
 @dp.message_handler(state=Booking.name)
@@ -128,7 +143,8 @@ async def procces_date(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: [message.text] not in list(kb_date)[0][1], state=Booking.date_booking)
 async def process_times_invalid(message: types.Message, state: FSMContext):
-    return await message.reply('❗ Выбрана <b>неверная дата.</b>\nПожалуйста, <u>выберите дату</u> с клавиатуры', reply_markup=kb_date, parse_mode="HTML")
+    return await message.reply('❗ Выбрана <b>неверная дата.</b>\nПожалуйста, <u>выберите дату</u> с клавиатуры',
+                               reply_markup=kb_date, parse_mode="HTML")
 
 
 @dp.message_handler(state=Booking.date_booking)
@@ -149,9 +165,18 @@ async def process_times(message: types.Message, state: FSMContext):
 
     else:
         for i in time_doc:
-            kb_times.add(i)
+            if list_of_data['date'] == datetime.now().strftime("%d/%m/%y"):
+                a = list_of_data['date'].split('/')
+                date_string = a[0] + '/' + a[1] + '/' + '20' + a[2] + ' ' + i.split('-')[0]
+                date_obj = datetime.strptime(date_string, '%d/%m/%Y %H:%M')
+                if date_obj < datetime.now():
+                    continue
+                else:
+                    kb_times.add(i)
+
+            else:
+                kb_times.add(i)
         list_kb_times = list(kb_times)[0][1]
-        print(time_doc)
         if time_doc:
             await Booking.next()
             await message.answer(
@@ -168,7 +193,8 @@ async def process_times(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: [message.text] not in list_kb_times, state=Booking.time_booking)
 async def process_check_true_booking_invalid(message: types.Message, state: FSMContext):
-    return await message.reply('❗ Пожалуйста, <u>выберите</u> <b>корректное</b> <u>время</u> с клавиатуры', parse_mode="HTML")
+    return await message.reply('❗ Пожалуйста, <u>выберите</u> <b>корректное</b> <u>время</u> с клавиатуры',
+                               parse_mode="HTML")
 
 
 @dp.message_handler(state=Booking.time_booking)
@@ -197,7 +223,8 @@ async def check_result_yes(message: types.Message, state: FSMContext):
         list_of_data['yes'] = message.text
     with open('data/dates_of_booking.csv', 'a', newline='', encoding='utf-8') as csvfile:
         spamwriter = csv.writer(csvfile)
-        spamwriter.writerows([[list_of_data['name'], list_of_data['date'], list_of_data['time'], message.from_user.id]])
+        spamwriter.writerows(
+            [[list_of_data['name'], list_of_data['date'], list_of_data['time'], message.from_user.username]])
     new_list = remove_time(dict_docs, [list_of_data['name'], list_of_data['date'], list_of_data['time']])
     dict_docs[list_of_data['name']][list_of_data['date']] = new_list
 
@@ -228,15 +255,16 @@ async def check_result_yes(message: types.Message, state: FSMContext):
 async def schedule(message: types.Message):
     await message.answer(
         text=f'📆 Если вы хотите узнать <b>расписание</b> одного или нескольких <u>врачей клиники</u>, <i>веберите имя</i> соответсвующего <i>специалиста</i> из <u>списка ниже.</u>\n\n'
-f'Если же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
+             f'Если же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
         reply_markup=kb_docs, parse_mode="HTML")
     await Schedule.sch_name.set()
 
 
 @dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Schedule.sch_name)
 async def schedule_invalid(message: types.Message, state: FSMContext):
-    return await message.reply('❗ Данный вами <b>специалист не работает</b> в <code>ООО"Бобёр"</code> 🦫.\nПожалуйста, <u>выбери врача</u> с клавиатуры',
-                               reply_markup=kb_docs, parse_mode="HTML")
+    return await message.reply(
+        '❗ Данный вами <b>специалист не работает</b> в <code>ООО"Бобёр"</code> 🦫.\nПожалуйста, <u>выбери врача</u> с клавиатуры',
+        reply_markup=kb_docs, parse_mode="HTML")
 
 
 @dp.message_handler(state=Schedule.sch_name)
@@ -279,7 +307,9 @@ async def specialist_info(message: types.Message, state: FSMContext):
                                  caption=f'🔍 <i>ФИО:</i>      <b>{i[0]}</b>\n🎯 <i>Область деятельности:</i>      <b>{i[1]} </b>\n\n🕰 <i>Время работы:</i>      <b>{i[2]}</b>',
                                  reply_markup=kb_start, parse_mode="HTML")
             await state.reset_state()
-#🎖🏅🎗🎯🎆🌇🌆🌄🩼⌛️⏳🕰💡⏰⏱🩸🦠💊📆📅🗓🗒📌📍🔍
+
+
+# 🎖🏅🎗🎯🎆🌇🌆🌄🩼⌛️⏳🕰💡⏰⏱🩸🦠💊📆📅🗓🗒📌📍🔍
 
 @dp.message_handler(Text(equals='🩺 Врач. Учётная запись 🌡'), state=None)
 async def account(message: types.Message):
@@ -313,7 +343,29 @@ async def password_invalid(message: types.Message, state: FSMContext):
 async def password_true(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['pass'] = message.text
-    await message.answer('Харош')
+    await message.answer('Выберите действие', reply_markup=kb_for_doc)
+    await Account.next()
+
+
+@dp.message_handler(lambda message: message.text not in ['Посмотреть мои записи', 'Удалить запись'],
+                    state=Account.action)
+async def action_invalid(message: types.Message, state: FSMContext):
+    return await message.reply('Некорректное действие\nВыберите действие с клавиатуры', reply_markup=kb_for_doc)
+
+
+@dp.message_handler(Text(equals='Посмотреть мои записи'), state=Account.action)
+async def action_booking(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['action'] = message.text
+    book_list = get_book(data['name'])
+    s = ''
+    for num,a in enumerate(book_list, start=1):
+        date = a[1]
+        time = a[2]
+        username = a[3]
+        s += f'{num}. Запись на прием:\nДата: {date}\nВремя: {time}\nПользователь: @{username}\n'
+    await message.answer(text=s, reply_markup=kb_for_doc)
+    await state.finish()
 
 
 if __name__ == '__main__':

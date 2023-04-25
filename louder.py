@@ -11,6 +11,7 @@ class Special(StatesGroup):
 class Account(StatesGroup):
     name = State()
     password = State()
+    action = State()
 
 
 class Booking(StatesGroup):
