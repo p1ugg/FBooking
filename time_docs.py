@@ -14,7 +14,6 @@ with open('data/doc_list.csv', 'r', newline='') as csvfile:
         for i in range(0, 8):
             a = now + timedelta(days=i)
             sp.append(a.strftime("%d/%m/%y"))
-
         new_sp = list()
         for i in range(len(dates)):
             a = dates[i]
@@ -27,7 +26,6 @@ with open('data/doc_list.csv', 'r', newline='') as csvfile:
                 sp_time = list()
                 for i in range(start, endd):
                     sp_time.append(f'{i}:00-{i + 1}:00')
-
                 tb = list(map(int, str(time_break.split()[1]).replace('00', '').replace(':', '').split('-')))
                 start = tb[0]
                 endd = tb[1]
@@ -39,7 +37,6 @@ with open('data/doc_list.csv', 'r', newline='') as csvfile:
                         sp_time.remove(i)
 
             new_sp.append(sp_time)
-
         Dates = dict()
         for i in sp:
             datte = list(map(int, i.split('/')))
@@ -48,7 +45,6 @@ with open('data/doc_list.csv', 'r', newline='') as csvfile:
             Dates[i] = new_sp[dd]
 
         dict_docs[row[0]] = Dates
-
 with open('data/dates_of_booking.csv', 'r', newline='', encoding='utf-8') as csvfile:
     spamreader = csv.reader(csvfile)
     for row in spamreader:
@@ -58,4 +54,3 @@ with open('data/dates_of_booking.csv', 'r', newline='', encoding='utf-8') as csv
             dict_docs[row[0]][row[1]] = new_list
         except Exception as ex:
             continue
-# pprint(dict_docs)

@@ -48,11 +48,6 @@ def get_dict_of_id_docs(docs_sp):
     return dict_of_ids
 
 
-now = datetime.now()
-for i in range(0, 8):
-    a = now + timedelta(days=i)
-    kb_date.add(a.strftime("%d/%m/%y"))
-
 greetings = f'''😇 Приветствуем! 😇 \n\nВы находитесь в <u>telegram-боте</u> клиники <code>ООО"Бобёр"</code> 🦫\n
 ❗️Наша клиника оснащена <b>первоклассным оборудованием</b>, 
 ведь счастливая жизнь пациента - это наша забота 🩻\n\n❕️Удобная инфраструктура \
@@ -72,6 +67,18 @@ def remove_time(dict_docs, list_of_data):
 
 
 # 🩺🩻🌡🩹❗️❕🔅〽️🌀🕑▫️🔸🔻🔺🟢🔵⚪️🟣🔹☑️🟩🔔🕘📢‼️🛎🧬🗓📆
+
+def get_schedule(timee):
+    s = ''
+    for j in timee.items():
+        if 'Не работает' in j[1]:
+            s += f'{j[0]} - Не работает\n'
+        elif not j[1]:
+            s += f'{j[0]} - Все места забрнированы\nx'
+        else:
+            s += f'{j[0]} - {" ".join(j[1])}\n'
+    return s
+
 
 @dp.message_handler(commands=['start'], state='*')  # Обработчик команды /start
 async def start(message: types.Message):
@@ -144,11 +151,19 @@ async def process_times(message: types.Message, state: FSMContext):
         for i in time_doc:
             kb_times.add(i)
         list_kb_times = list(kb_times)[0][1]
-        await message.answer(
-            text=f'Выберите удобное для Вас время',
-            reply_markup=kb_times
-        )
-        await Booking.next()
+        print(time_doc)
+        if time_doc:
+            await Booking.next()
+            await message.answer(
+                text=f'Выберите удобное для Вас время',
+                reply_markup=kb_times
+            )
+        else:
+            await message.answer(
+                text=f'К сожалению, все места забронированы. Попробуйте выбрать другой день',
+                reply_markup=kb_start
+            )
+            await state.finish()
 
 
 @dp.message_handler(lambda message: [message.text] not in list_kb_times, state=Booking.time_booking)
@@ -211,7 +226,6 @@ async def check_result_yes(message: types.Message, state: FSMContext):
 
 @dp.message_handler(Text(equals='🕑 Расписание 🕘'), state=None)
 async def schedule(message: types.Message):
-    print(message.from_user.id)
     await message.answer(
         text=f'Выберите специалиста ниже',
         reply_markup=kb_docs)
@@ -227,14 +241,9 @@ async def schedule_invalid(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Schedule.sch_name)
 async def schedule(message: types.Message, state: FSMContext):
     timee = dict_docs[message.text]
-    s = ''
-    for j in timee.items():
-        if 'Не работает' not in j[1]:
-            s += f'{j[0]} - {" ".join(j[1])}\n'
-        else:
-            s += f'{j[0]} - {j[1]}\n'
+    dates_for_schedule = get_schedule(timee)
     await message.answer(
-        text=s,
+        text=dates_for_schedule,
         reply_markup=kb_start)
     await state.reset_state()
 
@@ -304,28 +313,6 @@ async def password_true(message: types.Message, state: FSMContext):
         data['pass'] = message.text
     await message.answer('Харош')
 
-
-
-
-# @dp.message_handler(Text(equals='🩺 Врач. Учётная запись 🌡'), state=None)
-# async def account(message: types.Message):
-#     await message.answer(
-#         text=f'Кто ты?',
-#         reply_markup=kb_docs)
-#     await Account.acc_name.set()
-
-
-# @dp.message_handler(state=Account.acc_name)
-# async def vrach_client(message: types.Message, state: FSMContext):
-#
-#     await message.answer(text='Введите пароль')
-#     Account.next()
-#
-# @dp.message_handler(state=Account.check_password)
-# async def check_password(message: types.Message, state: FSMContext):
-# class Account(StatesGroup):
-#     acc_name = State()
-#     check_password = State()
 
 if __name__ == '__main__':
     executor.start_polling(dp)
