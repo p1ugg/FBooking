@@ -359,13 +359,12 @@ async def action_booking(message: types.Message, state: FSMContext):
         data['action'] = message.text
     book_list = get_book(data['name'])
     s = ''
-    for num,a in enumerate(book_list, start=1):
+    for num, a in enumerate(book_list, start=1):
         date = a[1]
         time = a[2]
         username = a[3]
         s += f'{num}. Запись на прием:\nДата: {date}\nВремя: {time}\nПользователь: @{username}\n'
     await message.answer(text=s, reply_markup=kb_for_doc)
-    await state.finish()
 
 
 if __name__ == '__main__':
