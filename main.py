@@ -103,7 +103,7 @@ def get_updated_kb(dict_docs, list_of_data):
 
 
 
-@dp.message_handler(commands=['start'], state='*')  # Обработчик команды /start
+@dp.message_handler(commands=['start'])  # Обработчик команды /start
 async def start(message: types.Message):
     beaver_center = open('data/other_photo/beavercenter.jpg', 'rb')
     await message.delete()
