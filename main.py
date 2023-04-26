@@ -93,6 +93,15 @@ def get_book(name):
 
     return book_list
 
+def get_updated_kb(dict_docs, list_of_data):
+    time_doc = dict_docs[list_of_data['name']]
+    kb_new_dates = ReplyKeyboardMarkup(resize_keyboard=True)
+    for date, times in time_doc.items():
+        if times != 'Не работает':
+            kb_new_dates.add(date)
+    return kb_new_dates
+
+
 
 @dp.message_handler(commands=['start'], state='*')  # Обработчик команды /start
 async def start(message: types.Message):
@@ -126,7 +135,7 @@ async def booking(message: types.Message):
 @dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Booking.name)
 async def procces_date_invalid(message: types.Message, state: FSMContext):
     return await message.reply(
-        '❗ Данный вами <b>специалист не работает</b> в <code>ООО"Бобёр"</code> 🦫.\nПожалуйста, <u>выбери врача</u> с клавиатуры',
+        '❗ Выбранный вами <b>специалист не работает</b> в <code>ООО"Бобёр"</code> 🦫.\nПожалуйста, <u>выбери врача</u> с клавиатуры',
         reply_markup=kb_docs, parse_mode="HTML")
 
 
@@ -134,10 +143,10 @@ async def procces_date_invalid(message: types.Message, state: FSMContext):
 async def procces_date(message: types.Message, state: FSMContext):
     async with state.proxy() as list_of_data:
         list_of_data['name'] = message.text
-
+    kb_new_dates = get_updated_kb(dict_docs, list_of_data)
     await message.answer(
         text=f'🗓 Выберите <i>удобную</i> для вас дату <u>из</u> <b>ниже представленного</b> <u>списка</u>:',
-        reply_markup=kb_date, parse_mode="HTML")
+        reply_markup=kb_new_dates, parse_mode="HTML")
     await Booking.next()
 
 
