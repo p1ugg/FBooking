@@ -9,7 +9,7 @@ from time_docs import dict_docs
 from louder import Schedule, Special, Booking, Account
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import logging
-from keyboards import kb_start, kb_for_doc, kb_yes_or_no, kb_docs, kb_date
+from keyboards import kb_start, kb_for_doc, kb_yes_or_no, kb_docs, kb_date, kb_bookings
 from docs_passwords import get_password
 
 # -*- coding: utf-8 -*-
@@ -373,7 +373,23 @@ async def action_booking(message: types.Message, state: FSMContext):
         time = a[2]
         username = a[3]
         s += f'{num}. Запись на прием:\nДата: {date}\nВремя: {time}\nПользователь: @{username}\n'
-    await message.answer(text=s, reply_markup=kb_for_doc)
+    await message.answer(text=s,
+                         reply_markup=kb_for_doc)
+
+@dp.message_handler(Text(equals='Удалить запись'), state=Account.action)
+async def action_del_booking(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['action'] = message.text
+    book_list = get_book(data['name'])
+    for a in book_list:
+        name = a[0]
+        date = a[1]
+        time = a[2]
+        s = f'{name}({date}, {time})'
+        kb_bookings.add(s)
+    await message.answer(text='Выберите запись, которую хотите удалить.',
+                         reply_markup=kb_bookings)
+
 
 
 if __name__ == '__main__':
