@@ -12,9 +12,11 @@ class Account(StatesGroup):
     name = State()
     password = State()
     action = State()
+    del_book = State()
 
 
 class Booking(StatesGroup):
+    name_patient = State()
     name = State()
     date_booking = State()
     time_booking = State()

@@ -89,9 +89,10 @@ def get_book(name):
             date_string = a[0] + '/' + a[1] + '/' + '20' + a[2] + ' ' + row[2].split('-')[0]
             date_obj = datetime.strptime(date_string, '%d/%m/%Y %H:%M')
             if name == row[0] and date_obj > datetime.now():
-                book_list.append((row[0], row[1], row[2], row[3]))
+                book_list.append((row[0], row[1], row[2], row[3], row[4]))
 
     return book_list
+
 
 def get_updated_kb(dict_docs, list_of_data):
     time_doc = dict_docs[list_of_data['name']]
@@ -101,6 +102,23 @@ def get_updated_kb(dict_docs, list_of_data):
             kb_new_dates.add(date)
     return kb_new_dates
 
+
+def remove_patient(s):
+    s = s.replace(')', '*')
+    s = s.replace('(', '*')
+    s = s.replace(',', '*')
+    s = s.split('*')  # плаг(01/05/23, 17:00-18:00)
+    patient_data = list(map(str.strip, list(filter(None, s))))
+    with open('data/dates_of_booking.csv', 'r', newline='', encoding='utf-8') as csvfile:
+        spamreader = csv.reader(csvfile)
+        new_sp = list()
+        for num, row in enumerate(spamreader):
+            if row[4] != patient_data[0] and row[1] != patient_data[1] and row[2] != patient_data[2]:
+                new_sp.append(row)
+        with open('data/dates_of_booking.csv', 'w', newline='', encoding='utf-8') as csvfile:
+            spamwriter = csv.writer(csvfile)
+            for row in new_sp:
+                spamwriter.writerows([row])
 
 
 @dp.message_handler(commands=['start'])  # Обработчик команды /start
@@ -126,10 +144,20 @@ async def cancel_handler(message: types.Message, state: FSMContext):
 @dp.message_handler(Text(equals='🔔 Запись 🛎'), state=None)  # Обработчик на нажатие кнопки "Запись"
 async def booking(message: types.Message):
     await message.answer(
+        text=f'Введите ваше Имя и Фамилию.', reply_markup=types.ReplyKeyboardRemove())
+    await Booking.name_patient.set()
+
+
+@dp.message_handler(state=Booking.name_patient)
+async def get_specalist(message: types.Message, state: FSMContext):
+    async with state.proxy() as list_of_data:
+        list_of_data['name_patient'] = message.text
+
+    await message.answer(
         text=f'🧬 Выберите <b>врача</b> <u>из</u> ниже представленного <u>списка</u>: 🧬',
         reply_markup=kb_docs,
         parse_mode="HTML")
-    await Booking.name.set()
+    await Booking.next()
 
 
 @dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Booking.name)
@@ -233,7 +261,8 @@ async def check_result_yes(message: types.Message, state: FSMContext):
     with open('data/dates_of_booking.csv', 'a', newline='', encoding='utf-8') as csvfile:
         spamwriter = csv.writer(csvfile)
         spamwriter.writerows(
-            [[list_of_data['name'], list_of_data['date'], list_of_data['time'], message.from_user.username]])
+            [[list_of_data['name'], list_of_data['date'], list_of_data['time'], message.from_user.username,
+              list_of_data['name_patient']]])
     new_list = remove_time(dict_docs, [list_of_data['name'], list_of_data['date'], list_of_data['time']])
     dict_docs[list_of_data['name']][list_of_data['date']] = new_list
 
@@ -245,7 +274,7 @@ async def check_result_yes(message: types.Message, state: FSMContext):
         reply_markup=kb_start, parse_mode="HTML"
     )
     doc_id = dict_of_ids[list_of_data['name']]
-    ans = f'💡 Оп, оп. К вам <i>записался клиентик</i> ➡ @{message.from_user.username}.\n<u>Дата</u> - <b>{list_of_data["date"]}</b>\n<u>Время</u> - <b>{list_of_data["time"]}</b>'
+    ans = f'💡 Оп, оп. К вам <i>записался: {list_of_data["name_patient"]}</i> ➡ @{message.from_user.username}.\n<u>Дата</u> - <b>{list_of_data["date"]}</b>\n<u>Время</u> - <b>{list_of_data["time"]}</b>'
     if doc_id != '':
         await bot.send_message(doc_id, ans, parse_mode="HTML")
     await state.finish()
@@ -372,9 +401,11 @@ async def action_booking(message: types.Message, state: FSMContext):
         date = a[1]
         time = a[2]
         username = a[3]
-        s += f'{num}. Запись на прием:\nДата: {date}\nВремя: {time}\nПользователь: @{username}\n'
+        name_patient = a[4]
+        s += f'{num}. Запись на прием:\nДата: {date}\nВремя: {time}\nПользователь: {name_patient}(@{username})\n'
     await message.answer(text=s,
                          reply_markup=kb_for_doc)
+
 
 @dp.message_handler(Text(equals='Удалить запись'), state=Account.action)
 async def action_del_booking(message: types.Message, state: FSMContext):
@@ -382,14 +413,25 @@ async def action_del_booking(message: types.Message, state: FSMContext):
         data['action'] = message.text
     book_list = get_book(data['name'])
     for a in book_list:
-        name = a[0]
+        name_patient = a[4]
         date = a[1]
         time = a[2]
-        s = f'{name}({date}, {time})'
+
+        s = f'{name_patient}({date}, {time})'
         kb_bookings.add(s)
     await message.answer(text='Выберите запись, которую хотите удалить.',
                          reply_markup=kb_bookings)
+    await Account.next()
 
+
+@dp.message_handler(state=Account.del_book)
+async def del_book(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['del_pat'] = message.text
+    remove_patient(data['del_pat'])
+    await message.answer(text='Вы успешно удалили запись!',
+                         reply_markup=kb_start)
+    await state.finish()
 
 
 if __name__ == '__main__':
