@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+from pprint import pprint
+
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from Tk import token
@@ -119,6 +121,18 @@ def remove_patient(s):
             spamwriter = csv.writer(csvfile)
             for row in new_sp:
                 spamwriter.writerows([row])
+
+
+def reset_date(s, name_of_doc, dict_docs):
+    s = s.replace(')', '*')
+    s = s.replace('(', '*')
+    s = s.replace(',', '*')
+    s = s.split('*')  # плаг(01/05/23, 17:00-18:00)
+    patient_data = list(map(str.strip, list(filter(None, s))))
+    date = patient_data[1]
+    time = patient_data[2]
+    dict_docs[name_of_doc][date].append(time)
+    dict_docs[name_of_doc][date].sort()
 
 
 @dp.message_handler(commands=['start'])  # Обработчик команды /start
@@ -409,6 +423,7 @@ async def action_booking(message: types.Message, state: FSMContext):
 
 @dp.message_handler(Text(equals='Удалить запись'), state=Account.action)
 async def action_del_booking(message: types.Message, state: FSMContext):
+    kb_bookings = ReplyKeyboardMarkup(resize_keyboard=True)
     async with state.proxy() as data:
         data['action'] = message.text
     book_list = get_book(data['name'])
@@ -421,6 +436,7 @@ async def action_del_booking(message: types.Message, state: FSMContext):
         kb_bookings.add(s)
     await message.answer(text='Выберите запись, которую хотите удалить.',
                          reply_markup=kb_bookings)
+
     await Account.next()
 
 
@@ -429,6 +445,7 @@ async def del_book(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['del_pat'] = message.text
     remove_patient(data['del_pat'])
+    reset_date(data['del_pat'], data['name'], dict_docs)
     await message.answer(text='Вы успешно удалили запись!',
                          reply_markup=kb_start)
     await state.finish()
