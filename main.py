@@ -1,6 +1,4 @@
 from datetime import datetime, timedelta
-from pprint import pprint
-
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from Tk import token
@@ -410,15 +408,19 @@ async def action_booking(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['action'] = message.text
     book_list = get_book(data['name'])
-    s = ''
-    for num, a in enumerate(book_list, start=1):
-        date = a[1]
-        time = a[2]
-        username = a[3]
-        name_patient = a[4]
-        s += f'{num}. Запись на прием:\nДата: {date}\nВремя: {time}\nПользователь: {name_patient}(@{username})\n'
-    await message.answer(text=s,
-                         reply_markup=kb_for_doc)
+    if book_list:
+        s = ''
+        for num, a in enumerate(book_list, start=1):
+            date = a[1]
+            time = a[2]
+            username = a[3]
+            name_patient = a[4]
+            s += f'{num}. Запись на прием:\nДата: {date}\nВремя: {time}\nПользователь: {name_patient}(@{username})\n'
+        await message.answer(text=s,
+                             reply_markup=kb_for_doc)
+    else:
+        await message.answer(text='Пока что к вам никто не записывался.\n Для выхода введите /cancel',
+                             reply_markup=kb_for_doc)
 
 
 @dp.message_handler(Text(equals='Удалить запись'), state=Account.action)
