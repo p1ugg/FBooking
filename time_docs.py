@@ -55,5 +55,3 @@ with open('data/dates_of_booking.csv', 'r', newline='', encoding='utf-8') as csv
         except Exception as ex:
             continue
 
-print(dict_docs['Газзаев Каркас СмегмаБристалбегович']['01/05/23'])
-print(dict_docs)
