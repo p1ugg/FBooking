@@ -18,8 +18,8 @@ logging.basicConfig(level=logging.INFO)
 
 # Инициализация бота
 TOKEN_API = token
-
-bot = Bot(TOKEN_API)
+PROXY_URL = 'https://www.algolia.com/'
+bot = Bot(TOKEN_API, proxy=PROXY_URL)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
