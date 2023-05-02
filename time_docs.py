@@ -45,7 +45,7 @@ with open('data/doc_list.csv', 'r', newline='', encoding='windows-1251') as csvf
             Dates[i] = new_sp[dd]
 
         dict_docs[row[0]] = Dates
-with open('data/dates_of_booking.csv', 'r', newline='', encoding='windows-1251') as csvfile:
+with open('data/dates_of_booking.csv', 'r', newline='', encoding='utf-8') as csvfile:
     spamreader = csv.reader(csvfile)
     for row in spamreader:
         try:
@@ -54,4 +54,3 @@ with open('data/dates_of_booking.csv', 'r', newline='', encoding='windows-1251')
             dict_docs[row[0]][row[1]] = new_list
         except Exception as ex:
             continue
-
