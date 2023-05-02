@@ -3,7 +3,7 @@ from datetime import datetime, date, timedelta
 from pprint import pprint
 
 dict_docs = dict()
-with open('data/doc_list.csv', 'r', newline='') as csvfile:
+with open('data/doc_list.csv', 'r', newline='', encoding='windows-1251') as csvfile:
     spamreader = csv.reader(csvfile)
     for row in spamreader:
         b = row
@@ -45,7 +45,7 @@ with open('data/doc_list.csv', 'r', newline='') as csvfile:
             Dates[i] = new_sp[dd]
 
         dict_docs[row[0]] = Dates
-with open('data/dates_of_booking.csv', 'r', newline='', encoding='utf-8') as csvfile:
+with open('data/dates_of_booking.csv', 'r', newline='', encoding='windows-1251') as csvfile:
     spamreader = csv.reader(csvfile)
     for row in spamreader:
         try:

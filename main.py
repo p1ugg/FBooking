@@ -25,7 +25,7 @@ dp = Dispatcher(bot, storage=storage)
 
 list_kb_times = list()
 docs_sp = list()
-with open('data/doc_list.csv', 'r', newline='') as csvfile:
+with open('data/doc_list.csv', 'r', newline='', encoding='windows-1251') as csvfile:
     spamreader = csv.reader(csvfile)
     for row in spamreader:
         kb_docs.add(row[0])
