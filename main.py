@@ -18,8 +18,8 @@ logging.basicConfig(level=logging.INFO)
 
 # Инициализация бота
 TOKEN_API = token
-PROXY_URL = 'https://www.algolia.com/'
-bot = Bot(TOKEN_API, proxy=PROXY_URL)
+# PROXY_URL = 'https://www.algolia.com/'
+bot = Bot(TOKEN_API)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
@@ -469,8 +469,10 @@ async def action_del_booking(message: types.Message, state: FSMContext):
     await Account.next()
 
 
-@dp.message_handler(lambda message: [message.text] not in list(kb_bookings)[0][1], state=Account.del_book)
+@dp.message_handler(lambda message: [message.text] not in list(get_bookings_for_del(get_book(data['name'])))[0][1], state=Account.del_book)
 async def del_book_invalid(message: types.Message, state: FSMContext):
+    print(kb_bookings)
+    print(message.text)
     return await message.reply(
         f'Извиниье, к вам не записывался этот клиент\nВыберите корректную запись с клавиатуры\nДля отмены - /cancel',
         reply_markup=kb_bookings, parse_mode="HTML")
