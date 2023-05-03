@@ -66,7 +66,7 @@ def remove_time(dict_docs, list_of_data):
     return cur_list
 
 
-# 🩺🩻🌡🩹❗️❕🔅〽️🌀🕑▫️🔸🔻🔺🟢🔵⚪️🟣🔹☑️🟩🔔🕘📢‼️🛎🧬🗓📆
+# 🩺🩻🌡🩹❗️❕🔅〽️🌀🕑▫️🔸🔻🔺🟢🔵⚪️🟣🔹☑️🟩🔔🕘📢‼️🛎🧬🗓📆👀‍👁🗨❌🗑
 
 def get_schedule(timee):
     s = ''
@@ -140,7 +140,7 @@ def get_bookings(book_list):
         time = a[2]
         username = a[3]
         name_patient = a[4]
-        s += f'{num}. Запись на прием:\nДата: {date}\nВремя: {time}\nПользователь: {name_patient}(@{username})\n'
+        s += f'🚩   {num}.   <b>Запись</b> <i>на прием</i>:\n📅   <b>Дата:</b> <i>{date}</i>\n<b>⏳   Время:</b> <i>{time}</i>\n👤   <b>Пользователь:</b> <i>{name_patient}</i> (@{username})\n\n'
     return s
 
 
@@ -217,7 +217,7 @@ async def cancel_handler(message: types.Message, state: FSMContext):
 @dp.message_handler(Text(equals='🔔 Запись 🛎'), state=None)  # Обработчик на нажатие кнопки "Запись"
 async def booking(message: types.Message):
     await message.answer(
-        text=f'Введите ваше Имя и Фамилию.', reply_markup=types.ReplyKeyboardRemove())
+        text=f'✏   Пожалуйста, <i>введите</i> своё <u>имя</u> и <u>фамилию</u>.\n\n Если же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.', reply_markup=types.ReplyKeyboardRemove(), parse_mode="HTML")
     await Booking.name_patient.set()
 
 
@@ -227,7 +227,7 @@ async def get_specalist(message: types.Message, state: FSMContext):
         list_of_data['name_patient'] = message.text
 
     await message.answer(
-        text=f'🧬 Выберите <b>врача</b> <u>из</u> ниже представленного <u>списка</u>: 🧬',
+        text=f'🧬 Выберите <b>врача</b> <u>из</u> ниже представленного <u>списка</u>: 🧬\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
         reply_markup=kb_docs,
         parse_mode="HTML")
     await Booking.next()
@@ -236,7 +236,7 @@ async def get_specalist(message: types.Message, state: FSMContext):
 @dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Booking.name)
 async def procces_date_invalid(message: types.Message, state: FSMContext):
     return await message.reply(
-        '❗ Выбранный вами <b>специалист не работает</b> в <code>ООО"Бобёр"</code> 🦫.\nПожалуйста, <u>выбери врача</u> с клавиатуры',
+        '❗ Выбранный вами <b>специалист не работает</b> в <code>ООО"Бобёр"</code> 🦫.\nПожалуйста, <u>выбери врача</u> с клавиатуры.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
         reply_markup=kb_docs, parse_mode="HTML")
 
 
@@ -246,14 +246,14 @@ async def procces_date(message: types.Message, state: FSMContext):
         list_of_data['name'] = message.text
     kb_new_dates = get_updated_kb(dict_docs, list_of_data)
     await message.answer(
-        text=f'🗓 Выберите <i>удобную</i> для вас дату <u>из</u> <b>ниже представленного</b> <u>списка</u>:',
+        text=f'🗓 Выберите <i>удобную</i> для вас дату <u>из</u> <b>ниже представленного</b> <u>списка</u>:\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
         reply_markup=kb_new_dates, parse_mode="HTML")
     await Booking.next()
 
 
 @dp.message_handler(lambda message: [message.text] not in list(kb_date)[0][1], state=Booking.date_booking)
 async def process_times_invalid(message: types.Message, state: FSMContext):
-    return await message.reply('❗ Выбрана <b>неверная дата.</b>\nПожалуйста, <u>выберите дату</u> с клавиатуры',
+    return await message.reply('❗ Выбрана <b>неверная дата.</b>\nПожалуйста, <u>выберите дату</u> с клавиатуры.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
                                reply_markup=kb_date, parse_mode="HTML")
 
 
@@ -279,7 +279,7 @@ async def process_times(message: types.Message, state: FSMContext):
         if time_doc:
             await Booking.next()
             await message.answer(
-                text=f'⏰ Выберите <i>удобное</i> для вас время <u>из</u> <b>ниже представленного</b> <u>списка</u>:',
+                text=f'⏰ Выберите <i>удобное</i> для вас время <u>из</u> <b>ниже представленного</b> <u>списка</u>:\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
                 reply_markup=kb_times, parse_mode="HTML"
             )
         else:
@@ -292,7 +292,7 @@ async def process_times(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: [message.text] not in list_kb_times, state=Booking.time_booking)
 async def process_check_true_booking_invalid(message: types.Message, state: FSMContext):
-    return await message.reply('❗ Пожалуйста, <u>выберите</u> <b>корректное</b> <u>время</u> с клавиатуры',
+    return await message.reply('❗ Пожалуйста, <u>выберите</u> <b>корректное</b> <u>время</u> с клавиатуры.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
                                parse_mode="HTML")
 
 
@@ -312,7 +312,7 @@ async def process_check_true_booking(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: message.text.lower() not in ['да', 'нет'], state=Booking.check_true_booking)
 async def check_result_invalid(message: types.Message, state: FSMContext):
-    return await message.reply('❗ Пожалуйста, <b>выберите</b> <u>ДА</u> или <u>НЕТ</u> с клавиатуры',
+    return await message.reply('❗ Пожалуйста, <b>выберите</b> <u>ДА</u> или <u>НЕТ</u> с клавиатуры.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
                                reply_markup=kb_yes_or_no, parse_mode="HTML")
 
 
@@ -357,7 +357,7 @@ async def schedule(message: types.Message):
 @dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Schedule.sch_name)
 async def schedule_invalid(message: types.Message, state: FSMContext):
     return await message.reply(
-        '❗ Данный вами <b>специалист не работает</b> в <code>ООО"Бобёр"</code> 🦫.\nПожалуйста, <u>выбери врача</u> с клавиатуры',
+        '❗ Данный вами <b>специалист не работает</b> в <code>ООО"Бобёр"</code> 🦫.\nПожалуйста, <u>выберите врача</u> с клавиатуры.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
         reply_markup=kb_docs, parse_mode="HTML")
 
 
@@ -365,6 +365,7 @@ async def schedule_invalid(message: types.Message, state: FSMContext):
 async def schedule(message: types.Message, state: FSMContext):
     timee = dict_docs[message.text]
     dates_for_schedule = get_schedule(timee)
+    await message.answer(text="📒 <i>Расписание специалиста:</i>", parse_mode="HTML")
     await message.answer(
         text=dates_for_schedule,
         reply_markup=kb_start)
@@ -375,15 +376,15 @@ async def schedule(message: types.Message, state: FSMContext):
 async def specialists(message: types.Message):
     await message.answer(
         text=f'📍 Если вы хотите <i>ознакомиться с</i> базовой <i>информацией</i> '
-             f'о <b>любом</b> из наших специалистов, просто <u>выберите</u> его <u>имя</u> из <b>списка ниже.</b>\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
+             f'о <b>любом</b> из наших специалистов, просто <u>выберите</u> его <u>имя</u> из <b>списка ниже.</b>\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
         reply_markup=kb_docs, parse_mode="HTML")
     await Special.spec_name.set()
 
 
 @dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Special.spec_name)
 async def specialist_info_invalid(message: types.Message, state: FSMContext):
-    return await message.reply('Такой врач у нас не работает.\nПожалуйста, выбери врача с клавиатуры',
-                               reply_markup=kb_docs)
+    return await message.reply('❗ Данный вами <b>специалист не работает</b> в <code>ООО"Бобёр"</code> 🦫.\nПожалуйста, <u>выберите врача</u> с клавиатуры.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
+                               reply_markup=kb_docs, parse_mode="HTML")
 
 
 @dp.message_handler(state=Special.spec_name)
@@ -398,20 +399,20 @@ async def specialist_info(message: types.Message, state: FSMContext):
             await state.reset_state()
 
 
-# 🎖🏅🎗🎯🎆🌇🌆🌄🩼⌛️⏳🕰💡⏰⏱🩸🦠💊📆📅🗓🗒📌📍🔍
+# 🎖🏅🎗🎯🎆🌇🌆🌄🩼⌛️⏳🕰💡⏰⏱🩸🦠💊📆📅🗓🗒📌📍🔍💉✏️✨
 
 @dp.message_handler(Text(equals='🩺 Врач. Учётная запись 🌡'), state=None)
 async def account(message: types.Message):
     await Account.name.set()
     await message.answer(
-        text=f'Кто ты',
-        reply_markup=kb_docs)
+        text=f'<u>💉 Дорогой врач</u>, выберите своё <i>имя</i> и <i>фамилию</i> из <b>списка ниже</b>.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
+        reply_markup=kb_docs, parse_mode="HTML")
 
 
 @dp.message_handler(lambda message: [message.text] not in list(kb_docs)[0][1], state=Account.name)
 async def procces_password_invalid(message: types.Message, state: FSMContext):
-    return await message.reply('Такой врач у нас не работает.\nПожалуйста, выбери врача с клавиатуры',
-                               reply_markup=kb_docs)
+    return await message.reply('❗ Данный вами <b>специалист не работает</b> в <code>ООО"Бобёр"</code> 🦫.\nПожалуйста, <u>выберите врача</u> с клавиатуры.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
+                               reply_markup=kb_docs, parse_mode="HTML")
 
 
 @dp.message_handler(state=Account.name)
@@ -419,30 +420,30 @@ async def procces_password(message: types.Message, state: FSMContext):
     global data
     async with state.proxy() as data:
         data['name'] = message.text
-    await message.answer(text=f'Введите пароль', reply_markup=types.ReplyKeyboardRemove())
+    await message.answer(text=f'🔑️  Пожалуйста, <i>введите</i> ваш <i>пароль</i>.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.', reply_markup=types.ReplyKeyboardRemove(), parse_mode="HTML")
     await Account.next()
 
 
 @dp.message_handler(lambda message: message.text != get_password(data['name']), state=Account.password)
 async def password_invalid(message: types.Message, state: FSMContext):
-    return await message.reply('Введите корректный пароль\nЧтобы выйти - cancel')
+    return await message.reply('❗ Данный вами <u>пароль</u> <b>не действителен</b>, пожалуйста, <i>введите корректный пароль</i>.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.', parse_mode="HTML")
 
 
 @dp.message_handler(state=Account.password)
 async def password_true(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['pass'] = message.text
-    await message.answer('Выберите действие', reply_markup=kb_for_doc)
+    await message.answer('✨ <b>Вы</b> можете <b>выбрать</b> <u>одну из доступных вам функций</u> из списка ниже.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.', reply_markup=kb_for_doc, parse_mode="HTML")
     await Account.next()
 
 
-@dp.message_handler(lambda message: message.text not in ['Посмотреть мои записи', 'Удалить запись'],
+@dp.message_handler(lambda message: message.text not in ['👀 Посмотреть записи 👀', '🗑 Удалить запись ❌'],
                     state=Account.action)
 async def action_invalid(message: types.Message, state: FSMContext):
-    return await message.reply('Некорректное действие\nВыберите действие с клавиатуры', reply_markup=kb_for_doc)
+    return await message.reply('❗ Некорректное действие ❗\nПожалуйста, <b>выберите функцию</b> <u>из</u> ранее <u>приведённого списка</u>.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.', reply_markup=kb_for_doc, parse_mode="HTML")
 
 
-@dp.message_handler(Text(equals='Посмотреть мои записи'), state=Account.action)
+@dp.message_handler(Text(equals='👀 Посмотреть записи 👀'), state=Account.action)
 async def action_booking(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['action'] = message.text
@@ -450,21 +451,22 @@ async def action_booking(message: types.Message, state: FSMContext):
     if book_list:
         s = get_bookings(book_list)
         await message.answer(text=s,
-                             reply_markup=kb_for_doc)
+                             reply_markup=kb_for_doc, parse_mode="HTML")
+        await message.answer(text="Если же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.", parse_mode="HTML")
     else:
-        await message.answer(text='Пока что к вам никто не записывался.\n Для выхода введите /cancel',
-                             reply_markup=kb_for_doc)
+        await message.answer(text='❗ <i>Просим прощения</i>, но, к сожалению, к вам ещё <b>никто не записывался</b>.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
+                             reply_markup=kb_for_doc, parse_mode="HTML")
 
 
-@dp.message_handler(Text(equals='Удалить запись'), state=Account.action)
+@dp.message_handler(Text(equals='🗑 Удалить запись ❌'), state=Account.action)
 async def action_del_booking(message: types.Message, state: FSMContext):
     kb_bookings = ReplyKeyboardMarkup(resize_keyboard=True)
     async with state.proxy() as data:
         data['action'] = message.text
     book_list = get_book(data['name'])
     kb_bookings = get_bookings_for_del(book_list)
-    await message.answer(text='Выберите запись, которую хотите удалить.',
-                         reply_markup=kb_bookings)
+    await message.answer(text='💥 <b>Выберите запись</b>, которую хотите <b>удалить</b>.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
+                         reply_markup=kb_bookings, parse_mode="HTML")
 
     await Account.next()
 
@@ -474,7 +476,7 @@ async def del_book_invalid(message: types.Message, state: FSMContext):
     print(kb_bookings)
     print(message.text)
     return await message.reply(
-        f'Извиниье, к вам не записывался этот клиент\nВыберите корректную запись с клавиатуры\nДля отмены - /cancel',
+        f'❗ Извините, но <u>данный клиент не записывался</u> к вам на приём.\nПожалуйста, <b>выберите корректного клиента</b> из <i>списка ниже</i>.\n\nЕсли же вы хотите <b>вернуться</b> в <i>главное меню</i>, введите /cancel на клавиатуре.',
         reply_markup=kb_bookings, parse_mode="HTML")
 
 
@@ -484,8 +486,8 @@ async def del_book(message: types.Message, state: FSMContext):
         data['del_pat'] = message.text
     remove_patient(data['del_pat'])
     reset_date(data['del_pat'], data['name'], dict_docs)
-    await message.answer(text='Вы успешно удалили запись!',
-                         reply_markup=kb_start)
+    await message.answer(text='🗑 <b>Запись</b> успешно <b>удалена!</b>\n\nПожалуйста, <u>уведомите клиента</u> об сложившихся обстоятельствах',
+                         reply_markup=kb_start, parse_mode="HTML")
     await state.finish()
 
 
